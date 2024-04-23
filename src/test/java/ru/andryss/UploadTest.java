@@ -28,11 +28,6 @@ public class UploadTest extends SeleniumBaseTest {
     private final Pattern markdownPattern = Pattern.compile("\\[!\\[FastPic.Ru]\\(.*?\\)]\\(.*?\\)");
 
     @SneakyThrows
-    private String absolutePathOf(String resource) {
-        return new File(getClass().getResource(resource).toURI()).getAbsolutePath();
-    }
-
-    @SneakyThrows
     private File downloadImage(String link, String format) {
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder(URI.create(link)).GET().build();
