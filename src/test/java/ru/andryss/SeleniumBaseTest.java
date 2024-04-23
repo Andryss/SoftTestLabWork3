@@ -36,10 +36,10 @@ public class SeleniumBaseTest {
     }
 
     protected WebElement waitAndFind(WebDriver driver, By by) {
-        return new WebDriverWait(driver, Duration.ofSeconds(10)).until(visibilityOfElementLocated(by));
+        return new WebDriverWait(driver, Duration.ofSeconds(3)).until(visibilityOfElementLocated(by));
     }
 
     protected List<WebElement> waitAndFindMultiple(WebDriver driver, By by) {
-        return new WebDriverWait(driver, Duration.ofSeconds(10)).until(visibilityOfAllElementsLocatedBy(by));
+        return new WebDriverWait(driver, Duration.ofSeconds(3)).until(visibilityOfAllElementsLocatedBy(by));
     }
 }

@@ -10,12 +10,8 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -63,24 +59,33 @@ public class UploadTest extends SeleniumBaseTest {
         }
     }
 
-    @Test
-    public void uploadImage_success() {
-        String imageName = "tsopa.jpg";
-        String format = imageName.substring(imageName.indexOf('.'));
+    @ParameterizedTest
+    @CsvSource({
+            "tsopa.gif",
+            "tsopa.jpg",
+            "tsopa.png",
+            "tsopa.webp",
+            // "tsopa.bmp", // NOT SUPPORTED!!!
+    })
+    public void uploadImage_success(String src) {
+        String format = src.substring(src.indexOf('.'));
 
-        drivers.forEach(driver -> {
+        drivers.parallelStream().forEach(driver -> {
             driver.get(BASE_URL);
             WebElement uploadFile = waitAndFind(driver, By.xpath("//div[@id='uploading_files']//input[@type='file' and @id='file']"));
-            uploadFile.sendKeys(absolutePathOf(imageName));
+            uploadFile.sendKeys(absolutePathOf(src));
+
+            WebElement clearOptionsLink = waitAndFind(driver, By.xpath("//div[@id='load-area']//a[@id='offeffectsLink']"));
+            clearOptionsLink.click();
 
             WebElement uploadButton = waitAndFind(driver, By.xpath("//form[@id='upload']//input[@id='uploadButton']"));
             uploadButton.click();
 
             WebElement pictureHeader = waitAndFind(driver, By.xpath("//div[@id='pic-1']//h3"));
-            assertEquals(imageName, pictureHeader.getText());
+            assertEquals(src, pictureHeader.getText());
 
             String directLink = waitAndFind(driver, By.xpath("//div[@id='pic-1']//ul[@class='codes-list']//li[1]//input[@type='text']")).getAttribute("value");
-            assertFileEquals(new File(absolutePathOf(imageName)), downloadImage(directLink, format));
+            assertFileEquals(new File(absolutePathOf(src)), downloadImage(directLink, format));
 
             String bbCodePreviewLink = waitAndFind(driver, By.xpath("//div[@id='pic-1']//ul[@class='codes-list']//li[2]//input[@type='text']")).getAttribute("value");
             assertTrue(bbCodePattern.matcher(bbCodePreviewLink).matches());
@@ -98,77 +103,46 @@ public class UploadTest extends SeleniumBaseTest {
             driver.get(imagePage);
 
             String imageLink = waitAndFind(driver, By.xpath("//div[@id='picContainer']//a[@id='imglink']//img")).getAttribute("src");
-            assertFileEquals(new File(absolutePathOf(imageName)), downloadImage(imageLink, format));
-        });
-    }
-
-    @Test
-    public void uploadImage_scaleImage_success() {
-        String imageName = "klimenkov.jpg";
-        String format = imageName.substring(imageName.indexOf('.'));
-        int size = 30;
-
-        drivers.forEach(driver -> {
-            driver.get(BASE_URL);
-            WebElement uploadFile = waitAndFind(driver, By.xpath("//div[@id='uploading_files']//input[@type='file' and @id='file']"));
-            uploadFile.sendKeys(absolutePathOf(imageName));
-
-            WebElement resizeCheckbox = waitAndFind(driver, By.xpath("//div[@id='settings']//input[@type='checkbox' and @id='check_orig_resize']"));
-            resizeCheckbox.click();
-
-            WebElement resizeField = waitAndFind(driver, By.xpath("//div[@id='settings']//input[@type='text' and @id='orig-resize']"));
-            resizeField.clear();
-            resizeField.sendKeys(String.valueOf(size));
-
-            WebElement uploadButton = waitAndFind(driver, By.xpath("//form[@id='upload']//input[@id='uploadButton']"));
-            uploadButton.click();
-
-            String directLink = waitAndFind(driver, By.xpath("//div[@id='pic-1']//ul[@class='codes-list']//li[1]//input[@type='text']")).getAttribute("value");
-
-            File image = downloadImage(directLink, format);
-            BufferedImage bufferedImage;
-            try {
-                bufferedImage = ImageIO.read(image);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            assertEquals(size, bufferedImage.getHeight());
+            assertFileEquals(new File(absolutePathOf(src)), downloadImage(imageLink, format));
         });
     }
 
     @Test
     public void uploadMultiple_deletePresented_success() {
-        String imageName1 = "gavrilov.jpg";
-        String imageName2 = "nikolaev.jpg";
+        String[] imageNames = { "gavrilov.jpg", "klimenkov.jpg", "nikolaev.jpg", "tsopa.jpg" };
 
-        drivers.forEach(driver -> {
+        drivers.parallelStream().forEach(driver -> {
             driver.get(BASE_URL);
 
             WebElement addFileInputButton = waitAndFind(driver, By.xpath("//div[@id='uploading_files']//a[@id='add_file_inputLink']"));
-            addFileInputButton.click();
+            for (int i = 1; i < imageNames.length; i++) {
+                addFileInputButton.click();
+            }
 
-            WebElement uploadMainFile = waitAndFind(driver, By.xpath("//div[@id='uploading_files']//input[@type='file' and @id='file']"));
-            uploadMainFile.sendKeys(absolutePathOf(imageName1));
+            for (int i = 0; i < imageNames.length; i++) {
+                String inputName = (i == 0 ? "file[]" : "file" + (i + 1));
+                WebElement uploadFile = waitAndFind(driver, By.xpath(String.format("//div[@id='uploading_files']//input[@type='file' and @name='%s']", inputName)));
+                uploadFile.sendKeys(absolutePathOf(imageNames[i]));
+            }
 
-            WebElement uploadAdditionalFile = waitAndFind(driver, By.xpath("//div[@id='uploading_files']//input[@type='file' and @name='file2']"));
-            uploadAdditionalFile.sendKeys(absolutePathOf(imageName2));
+            WebElement clearOptionsLink = waitAndFind(driver, By.xpath("//div[@id='load-area']//a[@id='offeffectsLink']"));
+            clearOptionsLink.click();
 
             WebElement uploadButton = waitAndFind(driver, By.xpath("//form[@id='upload']//input[@id='uploadButton']"));
             uploadButton.click();
 
-            WebElement picture1Header = waitAndFind(driver, By.xpath("//div[@id='pic-1']//h3"));
-            assertEquals(imageName1, picture1Header.getText());
-
-            WebElement picture2Header = waitAndFind(driver, By.xpath("//div[@id='pic-2']//h3"));
-            assertEquals(imageName2, picture2Header.getText());
+            for (int i = 0; i < imageNames.length; i++) {
+                String divPicId = "pic-" + (i + 1);
+                WebElement pictureHeader = waitAndFind(driver, By.xpath(String.format("//div[@id='%s']//h3", divPicId)));
+                assertEquals(imageNames[i], pictureHeader.getText());
+            }
 
             WebElement uploadsPageButton = waitAndFind(driver, By.xpath("//*[@id='headermenu']//*[@href='/my.php']/div"));
             assertEquals("Мои загрузки", uploadsPageButton.getText());
             uploadsPageButton.click();
 
             List<WebElement> imagesSelectBoxes = waitAndFindMultiple(driver, By.xpath("//div[@id='mypics']//input"));
-            assertEquals(2, imagesSelectBoxes.size());
+            assertEquals(imageNames.length, imagesSelectBoxes.size());
             imagesSelectBoxes.forEach(WebElement::click);
 
             WebElement deleteSelectedButton = waitAndFind(driver, By.xpath("//div[@id='mypics']//a[@id='delete_checked']"));
@@ -183,26 +157,30 @@ public class UploadTest extends SeleniumBaseTest {
 
     @ParameterizedTest
     @CsvSource({
-            "gavrilov.jpg,   0,             gavrilov.jpg",
-            "gavrilov.jpg,  90,  gavrilov_rotated_90.jpg",
-            "gavrilov.jpg, 180, gavrilov_rotated_180.jpg",
-            "gavrilov.jpg, 270, gavrilov_rotated_270.jpg",
+            "klimenkov.jpg, 439,            klimenkov.jpg",
+            "klimenkov.jpg, 400, klimenkov_scaled_400.jpg",
+            "klimenkov.jpg, 200, klimenkov_scaled_200.jpg",
+            "klimenkov.jpg, 120, klimenkov_scaled_120.jpg",
+            "klimenkov.jpg,  50,  klimenkov_scaled_50.jpg", // micro klimenkov
+            "klimenkov.jpg,  10,  klimenkov_scaled_10.jpg", // nano klimenkov
     })
-    public void uploadImage_rotateImage_success(String src, String rotation, String dest) {
-        String imageName = "opd.jpg";
-        String format = imageName.substring(imageName.indexOf('.'));
+    public void uploadImage_scaleImage_success(String src, String scale, String dest) {
+        String format = src.substring(src.indexOf('.'));
 
-        drivers.forEach(driver -> {
+        drivers.parallelStream().forEach(driver -> {
             driver.get(BASE_URL);
             WebElement uploadFile = waitAndFind(driver, By.xpath("//div[@id='uploading_files']//input[@type='file' and @id='file']"));
-            uploadFile.sendKeys(absolutePathOf(imageName));
+            uploadFile.sendKeys(absolutePathOf(src));
 
-            WebElement rotateCheckbox = waitAndFind(driver, By.xpath("//div[@id='settings']//input[@type='checkbox' and @id='check_orig_rotate']"));
-            rotateCheckbox.click();
+            WebElement clearOptionsLink = waitAndFind(driver, By.xpath("//div[@id='load-area']//a[@id='offeffectsLink']"));
+            clearOptionsLink.click();
 
-            WebElement rotateSelect = waitAndFind(driver, By.xpath("//div[@id='settings']//select[@id='orig-rotate']"));
-            new Select(rotateSelect).selectByValue("90");
+            WebElement resizeCheckbox = waitAndFind(driver, By.xpath("//div[@id='settings']//input[@type='checkbox' and @id='check_orig_resize']"));
+            resizeCheckbox.click();
 
+            WebElement resizeField = waitAndFind(driver, By.xpath("//div[@id='settings']//input[@type='text' and @id='orig-resize']"));
+            resizeField.clear();
+            resizeField.sendKeys(scale);
 
             WebElement uploadButton = waitAndFind(driver, By.xpath("//form[@id='upload']//input[@id='uploadButton']"));
             uploadButton.click();
@@ -211,21 +189,95 @@ public class UploadTest extends SeleniumBaseTest {
 
             File image = downloadImage(directLink, format);
 
-            assertFileEquals(new File(absolutePathOf("opd_rotated.jpg")), image);
+            assertFileEquals(new File(absolutePathOf(dest)), image);
+        });
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "gavrilov.jpg,   0,             gavrilov.jpg",
+            "gavrilov.jpg,  90,  gavrilov_rotated_90.jpg",
+            "gavrilov.jpg, 180, gavrilov_rotated_180.jpg",
+            "gavrilov.jpg, 270, gavrilov_rotated_270.jpg",
+    })
+    public void uploadImage_rotateImage_success(String src, String rotation, String dest) {
+        String format = src.substring(src.indexOf('.'));
+
+        drivers.parallelStream().forEach(driver -> {
+            driver.get(BASE_URL);
+            WebElement uploadFile = waitAndFind(driver, By.xpath("//div[@id='uploading_files']//input[@type='file' and @id='file']"));
+            uploadFile.sendKeys(absolutePathOf(src));
+
+            WebElement clearOptionsLink = waitAndFind(driver, By.xpath("//div[@id='load-area']//a[@id='offeffectsLink']"));
+            clearOptionsLink.click();
+
+            WebElement rotateCheckbox = waitAndFind(driver, By.xpath("//div[@id='settings']//input[@type='checkbox' and @id='check_orig_rotate']"));
+            rotateCheckbox.click();
+
+            WebElement rotateSelect = waitAndFind(driver, By.xpath("//div[@id='settings']//select[@id='orig-rotate']"));
+            new Select(rotateSelect).selectByValue(rotation);
+
+            WebElement uploadButton = waitAndFind(driver, By.xpath("//form[@id='upload']//input[@id='uploadButton']"));
+            uploadButton.click();
+
+            String directLink = waitAndFind(driver, By.xpath("//div[@id='pic-1']//ul[@class='codes-list']//li[1]//input[@type='text']")).getAttribute("value");
+
+            File image = downloadImage(directLink, format);
+
+            assertFileEquals(new File(absolutePathOf(dest)), image);
+        });
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "nikolaev.jpg, 25, nikolaev_jepg_25.jpg",
+            "nikolaev.jpg, 50, nikolaev_jepg_50.jpg",
+            "nikolaev.jpg, 75, nikolaev_jepg_75.jpg",
+    })
+    public void uploadImage_optimizeImage_success(String src, String optimization, String dest) {
+        String format = src.substring(src.indexOf('.'));
+
+        drivers.parallelStream().forEach(driver -> {
+            driver.get(BASE_URL);
+            WebElement uploadFile = waitAndFind(driver, By.xpath("//div[@id='uploading_files']//input[@type='file' and @id='file']"));
+            uploadFile.sendKeys(absolutePathOf(src));
+
+            WebElement clearOptionsLink = waitAndFind(driver, By.xpath("//div[@id='load-area']//a[@id='offeffectsLink']"));
+            clearOptionsLink.click();
+
+            WebElement optimizeCheckbox = waitAndFind(driver, By.xpath("//div[@id='settings']//input[@type='checkbox' and @id='optimization']"));
+            optimizeCheckbox.click();
+
+            WebElement optimizeField = waitAndFind(driver, By.xpath("//div[@id='settings']//input[@type='text' and @id='jpeg-quality']"));
+            optimizeField.clear();
+            optimizeField.sendKeys(optimization);
+
+            WebElement uploadButton = waitAndFind(driver, By.xpath("//form[@id='upload']//input[@id='uploadButton']"));
+            uploadButton.click();
+
+            String directLink = waitAndFind(driver, By.xpath("//div[@id='pic-1']//ul[@class='codes-list']//li[1]//input[@type='text']")).getAttribute("value");
+
+            File image = downloadImage(directLink, format);
+
+            assertFileEquals(new File(absolutePathOf(dest)), image);
         });
     }
 
     @AfterEach
     public void clearUploadedImages() {
-        drivers.forEach(driver -> {
+        drivers.parallelStream().forEach(driver -> {
+            driver.get(BASE_URL);
+
             WebElement uploadsPageButton = waitAndFind(driver, By.xpath("//*[@id='headermenu']//*[@href='/my.php']/div"));
             uploadsPageButton.click();
 
-            List<WebElement> imagesSelectBoxes = waitAndFindMultiple(driver, By.xpath("//div[@id='mypics']//input"));
-            imagesSelectBoxes.forEach(WebElement::click);
+            try {
+                List<WebElement> imagesSelectBoxes = waitAndFindMultiple(driver, By.xpath("//div[@id='mypics']//input"));
+                imagesSelectBoxes.forEach(WebElement::click);
 
-            WebElement deleteSelectedButton = waitAndFind(driver, By.xpath("//div[@id='mypics']//a[@id='delete_checked']"));
-            deleteSelectedButton.click();
+                WebElement deleteSelectedButton = waitAndFind(driver, By.xpath("//div[@id='mypics']//a[@id='delete_checked']"));
+                deleteSelectedButton.click();
+            } catch (TimeoutException ignore) { }
         });
     }
 
