@@ -32,6 +32,8 @@ public class MainPageTest extends SeleniumBaseTest {
 
             assertDoesNotThrow(() -> waitAndFind(driver, By.xpath("//a[@href='/donate']")));
 
+            assertDoesNotThrow(() -> waitAndFind(driver, By.xpath("//a[@href='https://new.fastpic.org/']")));
+
             WebElement loadAreaHeader = waitAndFind(driver, By.xpath("//div[@id='load-area']/span/h3"));
             assertEquals("Хостинг картинок и изображений", loadAreaHeader.getText());
 

@@ -36,6 +36,8 @@ public class FPUploaderPageTest extends SeleniumBaseTest {
             WebElement fpUploadContent = waitAndFind(driver, By.xpath("//div[@id='text-box']/p"));
             assertEquals("Рады вам представить программу загрузки изображений на наш сервис. Ссылка на загрузку: FP Uploader.", fpUploadContent.getText());
 
+            assertDoesNotThrow(() -> waitAndFind(driver, By.xpath("//a[@href='http://static.fastpic.ru/fpuploader/FPUploader.exe']")));
+
             WebElement featuresHeader = waitAndFind(driver, By.xpath("//div[@id='text-box']/div"));
             assertEquals("Основные возможности программы:", featuresHeader.getText());
 
