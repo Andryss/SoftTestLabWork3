@@ -66,11 +66,18 @@ public class SeleniumBaseTest {
         return driver;
     }
 
+    private final Duration timeout = Duration.ofSeconds(6);
+    private final Duration pollTime = Duration.ofSeconds(2);
+
+    @SneakyThrows
     protected WebElement waitAndFind(WebDriver driver, By by) {
-        return new WebDriverWait(driver, Duration.ofSeconds(3)).until(visibilityOfElementLocated(by));
+        Thread.sleep(pollTime.toMillis());
+        return new WebDriverWait(driver, timeout, pollTime).until(visibilityOfElementLocated(by));
     }
 
+    @SneakyThrows
     protected List<WebElement> waitAndFindMultiple(WebDriver driver, By by) {
-        return new WebDriverWait(driver, Duration.ofSeconds(3)).until(visibilityOfAllElementsLocatedBy(by));
+        Thread.sleep(pollTime.toMillis());
+        return new WebDriverWait(driver, timeout, pollTime).until(visibilityOfAllElementsLocatedBy(by));
     }
 }

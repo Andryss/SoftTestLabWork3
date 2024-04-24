@@ -95,6 +95,13 @@ public class UploadTest extends SeleniumBaseTest {
             assertTrue(markdownPattern.matcher(markdownPreviewLink).matches());
 
             String imagePage = waitAndFind(driver, By.xpath("//div[@id='pic-1']//a")).getAttribute("href");
+
+            WebElement uploadsPageButton = waitAndFind(driver, By.xpath("//*[@id='headermenu']//*[@href='/my.php']/div"));
+            uploadsPageButton.click();
+
+            String imagePageFromUploads = waitAndFind(driver, By.xpath("//div[@id='mypics']//div[@class='thumb']//a")).getAttribute("href");
+            assertEquals(imagePage, imagePageFromUploads);
+
             driver.get(imagePage);
 
             String imageLink = waitAndFind(driver, By.xpath("//div[@id='picContainer']//a[@id='imglink']//img")).getAttribute("src");
