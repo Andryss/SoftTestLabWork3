@@ -33,14 +33,15 @@ public class SeleniumBaseTest {
     @BeforeAll
     static void setUpDrivers() {
         if (drivers == null) {
-            drivers = new ArrayList<>();
-            drivers.add(getChromeDriver());
-            drivers.add(getFirefoxDriver());
-
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                if (drivers == null) return;
                 drivers.forEach(WebDriver::quit);
                 drivers = null;
             }));
+
+            drivers = new ArrayList<>();
+            drivers.add(getChromeDriver());
+            drivers.add(getFirefoxDriver());
         }
     }
 
