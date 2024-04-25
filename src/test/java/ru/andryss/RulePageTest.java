@@ -1,7 +1,6 @@
 package ru.andryss;
 
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -28,9 +27,9 @@ public class RulePageTest extends SeleniumBaseTest {
 
     @Test
     public void navigateToRulesPage_pageHasCorrectContent_success() {
-        drivers.forEach(driver -> {
+        drivers.parallelStream().forEach(driver -> {
             driver.get(BASE_URL);
-            WebElement rulesPageButton = waitAndFind(driver, By.xpath("//*[@id='headermenu']//*[@href='/rules']/div"));
+            WebElement rulesPageButton = waitAndFind(driver, "//*[@id='headermenu']//*[@href='/rules']/div");
 
             assertEquals("Правила", rulesPageButton.getText());
 
@@ -38,13 +37,13 @@ public class RulePageTest extends SeleniumBaseTest {
 
             assertEquals("Правила — FastPic", driver.getTitle());
 
-            assertDoesNotThrow(() -> waitAndFind(driver, By.xpath("//a[@href='/donate']")));
+            assertDoesNotThrow(() -> find(driver, "//a[@href='/donate']"));
 
-            WebElement rulesHeader = waitAndFind(driver, By.xpath("//div[@id='text-box']/h2"));
+            WebElement rulesHeader = find(driver, "//div[@id='text-box']/h2");
             assertEquals("Правила использования сервиса", rulesHeader.getText());
 
             for (int i = 0; i < rules.length; i++) {
-                WebElement rulesContent = waitAndFind(driver, By.xpath(String.format("//div[@id='text-box']/p[%d]", i + 1)));
+                WebElement rulesContent = find(driver, String.format("//div[@id='text-box']/p[%d]", i + 1));
                 assertEquals(rules[i], rulesContent.getText());
             }
         });

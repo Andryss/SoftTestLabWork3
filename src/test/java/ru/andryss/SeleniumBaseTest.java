@@ -2,7 +2,6 @@ package ru.andryss;
 
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.TestInstance;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -20,7 +19,6 @@ import static java.util.Objects.requireNonNull;
 import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfAllElementsLocatedBy;
 import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SeleniumBaseTest {
 
     public static final String BASE_URL = "https://fastpic.org";
@@ -28,12 +26,12 @@ public class SeleniumBaseTest {
     protected static List<WebDriver> drivers;
 
     @SneakyThrows
-    protected String absolutePathOf(String resource) {
-        return new File(requireNonNull(getClass().getResource(resource)).toURI()).getAbsolutePath();
+    protected static String absolutePathOf(String resource) {
+        return new File(requireNonNull(SeleniumBaseTest.class.getResource(resource)).toURI()).getAbsolutePath();
     }
 
     @BeforeAll
-    void setUpDrivers() {
+    static void setUpDrivers() {
         if (drivers == null) {
             drivers = new ArrayList<>();
             drivers.add(getChromeDriver());
@@ -46,9 +44,9 @@ public class SeleniumBaseTest {
         }
     }
 
-    private ChromeDriver getChromeDriver() {
-        String optimize = System.getProperty("fastpic.test.optimize.ad", "yes");
-        if ("no".equals(optimize)) {
+    private static ChromeDriver getChromeDriver() {
+        String optimize = System.getProperty("fastpic.test.optimize.ad", "true").toLowerCase();
+        if ("false".equals(optimize)) {
             return new ChromeDriver();
         }
         ChromeOptions options = new ChromeOptions();
@@ -56,9 +54,9 @@ public class SeleniumBaseTest {
         return new ChromeDriver(options);
     }
 
-    private FirefoxDriver getFirefoxDriver() {
-        String optimize = System.getProperty("fastpic.test.optimize.ad", "yes");
-        if ("no".equals(optimize)) {
+    private static FirefoxDriver getFirefoxDriver() {
+        String optimize = System.getProperty("fastpic.test.optimize.ad", "true").toLowerCase();
+        if ("false".equals(optimize)) {
             return new FirefoxDriver();
         }
         FirefoxDriver driver = new FirefoxDriver();
@@ -67,17 +65,26 @@ public class SeleniumBaseTest {
     }
 
     private final Duration timeout = Duration.ofSeconds(6);
-    private final Duration pollTime = Duration.ofSeconds(2);
+
+    protected WebElement find(WebDriver driver, String xpath) {
+        return new WebDriverWait(driver, timeout).until(visibilityOfElementLocated(By.xpath(xpath)));
+    }
+
+    protected List<WebElement> findMultiple(WebDriver driver, String xpath) {
+        return new WebDriverWait(driver, timeout).until(visibilityOfAllElementsLocatedBy(By.xpath(xpath)));
+    }
+
+    private final Duration waitTime = Duration.ofSeconds(2);
 
     @SneakyThrows
-    protected WebElement waitAndFind(WebDriver driver, By by) {
-        Thread.sleep(pollTime.toMillis());
-        return new WebDriverWait(driver, timeout, pollTime).until(visibilityOfElementLocated(by));
+    protected WebElement waitAndFind(WebDriver driver, String xpath) {
+        Thread.sleep(waitTime.toMillis());
+        return find(driver, xpath);
     }
 
     @SneakyThrows
-    protected List<WebElement> waitAndFindMultiple(WebDriver driver, By by) {
-        Thread.sleep(pollTime.toMillis());
-        return new WebDriverWait(driver, timeout, pollTime).until(visibilityOfAllElementsLocatedBy(by));
+    protected List<WebElement> waitAndFindMultiple(WebDriver driver, String xpath) {
+        Thread.sleep(waitTime.toMillis());
+        return findMultiple(driver, xpath);
     }
 }

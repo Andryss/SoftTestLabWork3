@@ -1,10 +1,10 @@
 package ru.andryss;
 
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DonatePageTest extends SeleniumBaseTest {
 
@@ -38,9 +38,9 @@ public class DonatePageTest extends SeleniumBaseTest {
 
     @Test
     public void navigateToDonatePage_pageHasCorrectContent_success() {
-        drivers.forEach(driver -> {
+        drivers.parallelStream().forEach(driver -> {
             driver.get(BASE_URL);
-            WebElement donatePageButton = waitAndFind(driver, By.xpath("//*[@id='headermenu']//*[@href='/donate']/div"));
+            WebElement donatePageButton = waitAndFind(driver, "//*[@id='headermenu']//*[@href='/donate']/div");
 
             assertEquals("Donate", donatePageButton.getText());
 
@@ -48,12 +48,12 @@ public class DonatePageTest extends SeleniumBaseTest {
 
             assertEquals("Donate — FastPic", driver.getTitle());
 
-            assertDoesNotThrow(() -> waitAndFind(driver, By.xpath("//a[@href='/donate']")));
+            assertDoesNotThrow(() -> find(driver, "//a[@href='/donate']"));
 
-            WebElement donateHeader = waitAndFind(driver, By.xpath("//div[@id='text-box']/h2"));
+            WebElement donateHeader = find(driver, "//div[@id='text-box']/h2");
             assertEquals("Друзья!", donateHeader.getText());
 
-            WebElement donateContent = waitAndFind(driver, By.xpath("//div[@id='text-box']/p"));
+            WebElement donateContent = find(driver, "//div[@id='text-box']/p");
             assertEquals(donateText, donateContent.getText());
         });
     }

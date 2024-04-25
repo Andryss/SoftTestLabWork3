@@ -1,7 +1,6 @@
 package ru.andryss;
 
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -25,9 +24,9 @@ public class AboutPageTest extends SeleniumBaseTest {
 
     @Test
     public void navigateToAboutPage_pageHasCorrectContent_success() {
-        drivers.forEach(driver -> {
+        drivers.parallelStream().forEach(driver -> {
             driver.get(BASE_URL);
-            WebElement aboutPageButton = waitAndFind(driver, By.xpath("//*[@id='headermenu']//*[@href='/about']/div"));
+            WebElement aboutPageButton = waitAndFind(driver, "//*[@id='headermenu']//*[@href='/about']/div");
 
             assertEquals("О сервисе", aboutPageButton.getText());
 
@@ -35,13 +34,13 @@ public class AboutPageTest extends SeleniumBaseTest {
 
             assertEquals("О сервисе — FastPic", driver.getTitle());
 
-            assertDoesNotThrow(() -> waitAndFind(driver, By.xpath("//a[@href='/donate']")));
+            assertDoesNotThrow(() -> find(driver, "//a[@href='/donate']"));
 
-            WebElement aboutHeader = waitAndFind(driver, By.xpath("//div[@id='text-box']/h2"));
+            WebElement aboutHeader = find(driver, "//div[@id='text-box']/h2");
             assertEquals("О сервисе", aboutHeader.getText());
 
             for (int i = 0; i < about.length; i++) {
-                WebElement aboutContent = waitAndFind(driver, By.xpath(String.format("//div[@id='text-box']/p[%d]", i + 1)));
+                WebElement aboutContent = find(driver, String.format("//div[@id='text-box']/p[%d]", i + 1));
                 assertEquals(about[i], aboutContent.getText());
             }
         });

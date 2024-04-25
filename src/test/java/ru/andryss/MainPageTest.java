@@ -1,7 +1,6 @@
 package ru.andryss;
 
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -20,9 +19,9 @@ public class MainPageTest extends SeleniumBaseTest {
 
     @Test
     public void navigateToMainPage_pageHasCorrectContent_success() {
-        drivers.forEach(driver -> {
+        drivers.parallelStream().forEach(driver -> {
             driver.get(BASE_URL);
-            WebElement mainPageButton = waitAndFind(driver, By.xpath("//*[@id='headermenu']//*[@href='/']/div"));
+            WebElement mainPageButton = waitAndFind(driver, "//*[@id='headermenu']//*[@href='/']/div");
 
             assertEquals("Главная", mainPageButton.getText());
 
@@ -30,17 +29,17 @@ public class MainPageTest extends SeleniumBaseTest {
 
             assertEquals("FastPic — Загрузить изображения", driver.getTitle());
 
-            assertDoesNotThrow(() -> waitAndFind(driver, By.xpath("//a[@href='/donate']")));
+            assertDoesNotThrow(() -> find(driver, "//a[@href='/donate']"));
 
-            assertDoesNotThrow(() -> waitAndFind(driver, By.xpath("//a[@href='https://new.fastpic.org/']")));
+            assertDoesNotThrow(() -> find(driver, "//a[@href='https://new.fastpic.org/']"));
 
-            WebElement loadAreaHeader = waitAndFind(driver, By.xpath("//div[@id='load-area']/span/h3"));
+            WebElement loadAreaHeader = find(driver, "//div[@id='load-area']/span/h3");
             assertEquals("Хостинг картинок и изображений", loadAreaHeader.getText());
 
-            WebElement uploadLimitsLink = waitAndFind(driver, By.xpath("//div[@id='load-area']//a[@id='limits']"));
+            WebElement uploadLimitsLink = waitAndFind(driver, "//div[@id='load-area']//a[@id='limits']");
             uploadLimitsLink.click();
 
-            WebElement uploadLimits = waitAndFind(driver, By.xpath("//div[@id='load-area']//p[@id='uploadLimits']"));
+            WebElement uploadLimits = find(driver, "//div[@id='load-area']//p[@id='uploadLimits']");
             assertEquals(limits, uploadLimits.getText());
         });
     }
