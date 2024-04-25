@@ -208,6 +208,37 @@ public class UploadTest extends SeleniumBaseTest {
         });
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "opd.jpg,     size,     opd_label_size.jpeg",
+            "opd.jpg,     text,   opd_label_custom.jpeg",
+            "opd.jpg, filename, opd_label_filename.jpeg",
+            "opd.jpg,       no,       opd_label_no.jpeg",
+    })
+    public void uploadImage_setThumbLabel_success(String src, String label, String dest) {
+        drivers.parallelStream().forEach(driver -> {
+            driver.get(BASE_URL);
+            selectImageToUpload(driver, src);
+
+            clickClearUploadOptions(driver);
+
+            WebElement selectLabelButton = waitAndFind(driver, String.format("//div[@id='settings']//input[@id='check_thumb' and @value='%s']", label));
+            selectLabelButton.click();
+
+            if ("text".equals(label)) {
+                WebElement labelText = waitAndFind(driver, "//div[@id='settings']//input[@type='text' and @id='thumb_text']");
+                labelText.clear();
+                labelText.sendKeys("Де факто");
+            }
+
+            clickUploadButton(driver);
+
+            String thumbLink = find(driver, "//div[@id='pic-1']//img").getAttribute("src");
+
+            assertFileEquals(new File(absolutePathOf(dest)), downloadImage(thumbLink));
+        });
+    }
+
     @AfterEach
     public void clearUploadedImages() {
         drivers.parallelStream().forEach(driver -> {
